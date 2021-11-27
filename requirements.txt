@@ -1,0 +1,4 @@
+wheel
+opencv_python==4.5.4.60
+pillow==8.4.0
+qrcode==7.3.1
