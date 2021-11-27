@@ -3,17 +3,37 @@ import cv2
 import qrcode
 import qrcode.image.svg
 import sys
+import argparse
+
+# %%
+parser = argparse.ArgumentParser()
+
+#-db DATABSE -u USERNAME -p PASSWORD -size 20
+parser.add_argument("-fp", "--filepath", help="Path to image with QR code")
+parser.add_argument("-qrv", "--qrversion", help="Version of QR code (from 1-40)", type=int)
+parser.add_argument("-et", "--exporttype", help="File type of exported qr code (svg, jpg, png...)")
+args = parser.parse_args()
 
 # %%
 try:
-    file_path = sys.argv[1]
+    file_path = args.filepath
 except Exception as e:
     print('No file specified!')
 
-if len(sys.argv) > 2:
-    qr_version = sys.argv[2]
-else:
-    qr_version = 18
+image_factory = None
+qr_version = None
+export_type = '.jpg'
+
+if args.qrversion:
+    qr_version = args.qrversion
+    
+if args.exporttype:
+    export_type = args.exporttype
+    if export_type == 'svg':
+        image_factory = qrcode.image.svg.SvgPathImage
+    else:
+        image_factory = None
+
 
 # %%
 splitted = file_path.rsplit("/", 1)
@@ -39,11 +59,13 @@ qr = qrcode.QRCode(
         version=qr_version,
         box_size=10,
         border=5,
-        image_factory=qrcode.image.svg.SvgPathImage)
+        image_factory=image_factory)
 qr.add_data(val)
 qr.make(fit=True)
 img = qr.make_image(fill='black', back_color='white')
-save_path = f'{directory_path}/{file_name}_ver{qr_version}.svg'
+if not qr_version:
+    qr_version = 'default'
+save_path = f'{directory_path}/{file_name}_ver_{qr_version}.{export_type}'
 img.save(save_path)
 
 print(f'File saved to: {save_path}')
